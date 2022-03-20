@@ -11,6 +11,9 @@ from flask import Flask, request
 # если бы такое обращение, например, произошло внутри модуля logging, то мы бы получили 'logging'
 app = Flask(__name__)
 
+goods = iter(["слон", "кролик"])
+current_good = next(goods)
+
 # Устанавливаем уровень логирования
 logging.basicConfig(level=logging.INFO)
 
@@ -50,6 +53,7 @@ def main():
 
 
 def handle_dialog(req, res):
+    global current_good
     user_id = req['session']['user_id']
 
     if req['session']['new']:
@@ -65,7 +69,7 @@ def handle_dialog(req, res):
             ]
         }
         # Заполняем текст ответа
-        res['response']['text'] = 'Привет! Купи слона!'
+        res['response']['text'] = f'Привет! Купи {current_good}а!'
         # Получим подсказки
         res['response']['buttons'] = get_suggests(user_id)
         return
@@ -77,13 +81,27 @@ def handle_dialog(req, res):
     # Подумайте, все ли в этом фрагменте написано "красиво"?
     if any(i in req['request']['original_utterance'].lower() for i in ['ладно', 'куплю',
                                                                        'покупаю', 'хорошо']):
-        # Пользователь согласился, прощаемся.
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+        res['response']['text'] = f'{current_good.capitalize()}а можно найти на Яндекс.Маркете!'
+        try:
+            current_good = next(goods)
+        except StopIteration:
+            res['response']['end_session'] = True
+            return
+        sessionStorage[user_id] = {
+            'suggests': [
+                "Не хочу.",
+                "Не буду.",
+                "Отстань!",
+            ]
+        }
+        # Заполняем текст ответа
+        res['response']['text'] = f'Привет! Купи {current_good}а!'
+        # Получим подсказки
+        res['response']['buttons'] = get_suggests(user_id)
         return
 
     # Если нет, то убеждаем его купить слона!
-    res['response']['text'] = 'Все говорят "%s", а ты купи слона!' % (
+    res['response']['text'] = f'Все говорят "%s", а ты купи {current_good}а!' % (
         req['request']['original_utterance']
     )
     res['response']['buttons'] = get_suggests(user_id)
