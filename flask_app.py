@@ -1,9 +1,9 @@
 # импортируем библиотеки
-from flask import Flask, request
+# библиотека, которая нам понадобится для работы с JSON
+import json
 import logging
 
-# библиотека, которая нам понадобится для работы с JSON 
-import json
+from flask import Flask, request
 
 # создаем приложение 
 # мы передаем __name__, в нем содержится информация, в каком модуле мы находимся.
@@ -75,12 +75,7 @@ def handle_dialog(req, res):
     # В req['request']['original_utterance'] лежит весь текст, что нам прислал пользователь
     # Если он написал 'ладно', 'куплю', 'покупаю', 'хорошо', то мы считаем, что пользователь не согласился.
     # Подумайте, все ли в этом фрагменте написано "красиво"?
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо'
-    ]:
+    if ['ладно', 'куплю', 'покупаю', 'хорошо'] in req['request']['original_utterance'].lower():
         # Пользователь согласился, прощаемся.
         res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
         res['response']['end_session'] = True
@@ -121,5 +116,6 @@ def get_suggests(user_id):
 
 if __name__ == '__main__':
     import os
+
     port = int(os.getenv("PORT", 5000))
     app.run("0.0.0.0", port=port)
